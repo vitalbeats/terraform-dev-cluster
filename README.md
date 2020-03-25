@@ -23,4 +23,4 @@ With this configured, you can now access AWS. You can confirm this by running `a
 With this repository checked out, you will need to first initialise and download terraform providers. This can be done by running `terraform init`.
 
 ## Access
-This repository assumes usage of an [S3 backend](https://www.terraform.io/docs/backends/types/s3.html). To use this backend, your IAM user will need the `TerraformEKSDevBackend` attached to it to use this backend.
+This repository assumes usage of an [S3 backend](https://www.terraform.io/docs/backends/types/s3.html). To use this backend, your IAM user will need the `TerraformEKSDevBackend` attached to it to use this backend. In addition, terraform will expect you to specify the AWS region where operations should be executed. You can do this by defining the AWS default region environment variable `export AWS_DEFAULT_REGION=eu-west-1`. Vital Beats operates in EU West 1 (Ireland) region.
