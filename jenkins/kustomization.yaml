@@ -1,0 +1,23 @@
+commonLabels:
+  name: jenkins
+namespace: openshift-build
+resources:
+  - config-maps.yaml
+  - deployments.yaml
+  - ingresses.yaml
+  - pvcs.yaml
+  - role-bindings.yaml
+  - roles.yaml
+  - service-accounts.yaml
+  - services.yaml
+configMapGenerator:
+- name: jenkins-plugins
+  files:
+  - config/plugins.txt
+- name: jenkins-customization
+  files:
+  - config/groovy/executors.groovy
+  - config/groovy/kubernetes.groovy
+  - config/groovy/security-realm.groovy
+  - config/groovy/set-github-organization.groovy
+  - config/groovy/set-install-state.groovy

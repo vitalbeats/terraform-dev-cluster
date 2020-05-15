@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      name: jenkins
+  template:
+    metadata:
+      labels:
+        name: jenkins
+    spec:
+      containers:
+        - name: jenkins
+          image: jenkins/jenkins:2.236
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+              name: web
+            - containerPort: 50000
+              protocol: TCP
+              name: jnlp
+          volumeMounts:
+            - name: jenkins-home
+              mountPath: /var/jenkins_home
+            - name: jenkins-config
+              mountPath: /usr/share/jenkins/ref
+            - name: jenkins-plugins
+              mountPath: /tmp/jenkins-plugins
+            - name: jenkins-customization
+              mountPath: /tmp/jenkins-customization
+          envFrom:
+            - secretRef:
+                name: google-oauth
+          env:
+            - name: JAVA_OPTS
+              value: "-Dhudson.TcpSlaveAgentListener.hostName=jenkins"
+          command: ["/bin/bash", "-c"]
+          args: ["rm -rf /usr/share/jenkins/ref/init.groovy.d /var/jenkins_home/init.groovy.d; mkdir -p /usr/share/jenkins/ref/init.groovy.d; cp /tmp/jenkins-customization/* /usr/share/jenkins/ref/init.groovy.d/; cp /tmp/jenkins-plugins/plugins.txt /usr/share/jenkins/ref/; /usr/local/bin/install-plugins.sh < /usr/share/jenkins/ref/plugins.txt; /sbin/tini -s -- /usr/local/bin/jenkins.sh"]
+          resources:
+            requests:
+              memory: 512m
+              cpu: 100m
+            limits:
+              memory: 1G
+              cpu: '1'
+      securityContext:
+        fsGroup: 1000
+      serviceAccountName: jenkins
+      volumes:
+        - name: jenkins-home
+          persistentVolumeClaim:
+            claimName: jenkins-home
+        - name: jenkins-config
+          persistentVolumeClaim:
+            claimName: jenkins-config
+        - name: jenkins-plugins
+          configMap:
+            name: jenkins-plugins
+        - name: jenkins-customization
+          configMap:
+            name: jenkins-customization

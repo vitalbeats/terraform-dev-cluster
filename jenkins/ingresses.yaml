@@ -1,0 +1,15 @@
+
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: ci-server
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+    - host: jenkins-aws.vitalbeats.dev
+      http:
+        paths:
+          - backend:
+              serviceName: jenkins
+              servicePort: 8080
