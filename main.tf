@@ -9,7 +9,7 @@ terraform {
 }
 
 provider "aws" {
-  version = "~> 2.0"
+  version = ">= 2.62.0"
   region = "eu-west-1"
 }
 
@@ -23,7 +23,7 @@ provider "null" {
 
 module "cluster" {
   source  = "vitalbeats/cluster/eks"
-  version = "0.1.0-beta.11"
+  version = "0.1.0-beta.27"
 
   cluster-name    = "scaut-v2-dev"
   ingress-acm-arn = "arn:aws:acm:eu-west-1:454089853750:certificate/300523fe-fe6f-49a0-9dbe-14ec94dc93cd"
@@ -64,17 +64,74 @@ resource "kubernetes_secret" "jenkins-github" {
     }
 }
 
-resource "kubernetes_secret" "jenkins-google-oauth" {
-    metadata {
-        name = "google-oauth"
-        namespace = "openshift-build"
-    }
-
-    data = {
+locals {
+    google_oauth = {
         GOOGLE_CLIENT_ID      = var.google_client_id
         GOOGLE_CLIENT_SECRET  = var.google_client_secret
         GOOGLE_CLIENT_DOMAINS = var.google_client_domains
     }
+}
+
+resource "aws_iam_policy" "jenkins-secrets" {
+    name        = "scaut-v2-dev-JenkinsSecrets"
+    description = "Secrets used by Jenkins in development"
+    path        = "/scaut-v2-dev/"
+
+    policy =<<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetResourcePolicy",
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:ListSecretVersionIds"
+      ],
+      "Resource": [
+        "arn:aws:secretsmanager:eu-west-1:454089853750:secret:scaut-v2-dev/openshift-build/*"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "jenkins-secrets" {
+    name        = "scaut-v2-dev-secrets-manager-jenkins"
+    description = "Allows the Kubernetes Secrets Manager to read Jenkins secrets"
+    path        = "/secrets/scaut-v2-dev/openshift-build/"
+
+    assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::454089853750:role/scaut-v2-dev/scaut-v2-dev-SecretsManager"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "jenkins-secrets" {
+  role       = aws_iam_role.jenkins-secrets.name
+  policy_arn = aws_iam_policy.jenkins-secrets.arn
+}
+
+resource "aws_secretsmanager_secret" "jenkins-google-oauth" {
+    name        = "scaut-v2-dev/openshift-build/jenkins-google-oauth"
+    description = "Allows GSuite login for Jenkins"
+}
+
+resource "aws_secretsmanager_secret_version" "jenkins-google-oauth" {
+    secret_id     = aws_secretsmanager_secret.jenkins-google-oauth.id
+    secret_string = jsonencode(local.google_oauth)
 }
 
 resource "kubernetes_secret" "jenkins-ssh" {

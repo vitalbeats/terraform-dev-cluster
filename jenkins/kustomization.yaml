@@ -8,6 +8,7 @@ resources:
   - pvcs.yaml
   - role-bindings.yaml
   - roles.yaml
+  - secrets.yaml
   - service-accounts.yaml
   - services.yaml
 configMapGenerator:
