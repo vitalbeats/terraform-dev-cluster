@@ -24,3 +24,6 @@ With this repository checked out, you will need to first initialise and download
 
 ## Access
 This repository assumes usage of an [S3 backend](https://www.terraform.io/docs/backends/types/s3.html). To use this backend, your IAM user will need the `TerraformEKSDevBackend` attached to it to use this backend. In addition, terraform will expect you to specify the AWS region where operations should be executed. You can do this by defining the AWS default region environment variable `export AWS_DEFAULT_REGION=eu-west-1`. Vital Beats operates in EU West 1 (Ireland) region.
+
+## Running
+To run this repository, you first must set up some secrets and credentials for the cluster to use. Create `terraform.tfvars` based upon `terraform.tfvars.example`. Once done, you can run the repository with `terraform plan` or `terraform apply` as usual.

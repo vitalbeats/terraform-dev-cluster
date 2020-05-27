@@ -1,0 +1,9 @@
+# The access token used for scanning the GitHub organisation
+github_access_token = "string"
+
+# Google OAuth credentials for allowing Jenkins to do GSuite login
+google_client_id = "string"
+google_client_secret = "string"
+
+# Jenkins password for pulling / pushing to the private PyPI server
+pypi_password = "string"
