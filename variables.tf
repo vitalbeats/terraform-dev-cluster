@@ -28,3 +28,7 @@ variable "pypi_username" {
 variable "pypi_password" {
     type    = string
 }
+
+variable "registry_ha_secret" {
+    type    = string
+}

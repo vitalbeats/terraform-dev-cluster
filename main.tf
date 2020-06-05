@@ -70,6 +70,18 @@ locals {
         GOOGLE_CLIENT_SECRET  = var.google_client_secret
         GOOGLE_CLIENT_DOMAINS = var.google_client_domains
     }
+
+    pypi_config = {
+      "auth.toml"   = "${file("${path.module}/input/auth.toml")}"
+      "config.toml" = "${file("${path.module}/input/config.toml")}"
+      password      = var.pypi_password
+      username      = var.pypi_username
+    }
+
+    docker_registry_secret = {
+      htpasswd       = "${file("${path.module}/input/registry-htpasswd")}"
+      haSharedSecret = var.registry_ha_secret
+    }
 }
 
 resource "aws_iam_policy" "jenkins-secrets" {
@@ -134,29 +146,86 @@ resource "aws_secretsmanager_secret_version" "jenkins-google-oauth" {
     secret_string = jsonencode(local.google_oauth)
 }
 
-resource "kubernetes_secret" "jenkins-ssh" {
-    metadata {
-        name = "jenkins-build"
-        namespace = "openshift-build"
-    }
-
-    data = {
-        ssh-privatekey = "${file("${path.module}/input/ssh-privatekey")}"
-    }
+resource "aws_secretsmanager_secret" "jenkins-ssh-privatekey" {
+    name        = "scaut-v2-dev/openshift-build/jenkins-ssh-privatekey"
+    description = "SSH key for Git in Jenkins"
 }
 
-resource "kubernetes_secret" "jenkins-pypi-config" {
-    metadata {
-        name = "pypi-config"
-        namespace = "openshift-build"
-    }
+resource "aws_secretsmanager_secret_version" "jenkins-ssh-privatekey" {
+    secret_id     = aws_secretsmanager_secret.jenkins-ssh-privatekey.id
+    secret_string = jsonencode("${file("${path.module}/input/ssh-privatekey")}")
+}
 
-    data = {
-        "auth.toml"   = "${file("${path.module}/input/auth.toml")}"
-        "config.toml" = "${file("${path.module}/input/config.toml")}"
-        password      = var.pypi_password
-        username      = var.pypi_username
+resource "aws_secretsmanager_secret_version" "jenkins-pypi-config" {
+    secret_id     = aws_secretsmanager_secret.jenkins-pypi-config.id
+    secret_string = jsonencode(local.pypi_config)
+}
+
+resource "aws_secretsmanager_secret" "jenkins-pypi-config" {
+    name        = "scaut-v2-dev/openshift-build/jenkins-pypi-config"
+    description = "PyPI config for Jenkins"
+}
+
+resource "aws_iam_policy" "registry-secrets" {
+    name        = "scaut-v2-dev-RegistrySecrets"
+    description = "Secrets used by docker registry in development"
+    path        = "/scaut-v2-dev/"
+
+    policy =<<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetResourcePolicy",
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:ListSecretVersionIds"
+      ],
+      "Resource": [
+        "arn:aws:secretsmanager:eu-west-1:454089853750:secret:scaut-v2-dev/registry/*"
+      ]
     }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "registry-secrets" {
+    name        = "scaut-v2-dev-secrets-manager-registry"
+    description = "Allows the Kubernetes Secrets Manager to read docker registry secrets"
+    path        = "/secrets/scaut-v2-dev/registry/"
+
+    assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::454089853750:role/scaut-v2-dev/scaut-v2-dev-SecretsManager"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "registry-secrets" {
+  role       = aws_iam_role.registry-secrets.name
+  policy_arn = aws_iam_policy.registry-secrets.arn
+}
+
+resource "aws_secretsmanager_secret" "docker-registry-secret" {
+    name        = "scaut-v2-dev/registry/docker-registry-secret"
+    description = "Credentials for running a docker registry"
+}
+
+resource "aws_secretsmanager_secret_version" "docker-registry-secret" {
+    secret_id     = aws_secretsmanager_secret.docker-registry-secret.id
+    secret_string = jsonencode(local.docker_registry_secret)
 }
 
 data "kustomization" "jenkins" {

@@ -7,3 +7,6 @@ google_client_secret = "string"
 
 # Jenkins password for pulling / pushing to the private PyPI server
 pypi_password = "string"
+
+# HA shared secret for registry
+registry_ha_secret = "string"
