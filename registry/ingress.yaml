@@ -15,7 +15,7 @@ metadata:
       nginx.ingress.kubernetes.io/proxy-body-size: "30720m"
 spec:
   rules:
-    - host: registry.goblinwrangler.com
+    - host: registry-aws.vitalbeats.dev
       http:
         paths:
           - path: /

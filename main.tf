@@ -38,6 +38,8 @@ provider "kustomization" {
     kubeconfig_raw = module.cluster.kubeconfig
 }
 
+data "aws_caller_identity" "current" {}
+
 resource "kubernetes_namespace" "jenkins" {
     metadata {
         name = "openshift-build"
@@ -81,6 +83,10 @@ locals {
     docker_registry_secret = {
       htpasswd       = "${file("${path.module}/input/registry-htpasswd")}"
       haSharedSecret = var.registry_ha_secret
+    }
+
+    docker_registry_config = {
+      ".dockerconfigjson" = "${file("${path.module}/input/registry-config.json")}"
     }
 }
 
@@ -192,12 +198,59 @@ resource "aws_iam_policy" "registry-secrets" {
 EOF
 }
 
-resource "aws_iam_role" "registry-secrets" {
-    name        = "scaut-v2-dev-secrets-manager-registry"
-    description = "Allows the Kubernetes Secrets Manager to read docker registry secrets"
-    path        = "/secrets/scaut-v2-dev/registry/"
+resource "aws_iam_policy" "registry-config" {
+    name        = "scaut-v2-dev-RegistryConfig"
+    description = "Secrets for the registry config in development"
+    path        = "/scaut-v2-dev/"
 
-    assume_role_policy = <<EOF
+    policy =<<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetResourcePolicy",
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:ListSecretVersionIds"
+      ],
+      "Resource": [
+        "arn:aws:secretsmanager:eu-west-1:454089853750:secret:scaut-v2-dev/docker-registry-config*"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "registry-secrets" {
+  name        = "scaut-v2-dev-secrets-manager-registry"
+  description = "Allows the Kubernetes Secrets Manager to read docker registry secrets"
+  path        = "/secrets/scaut-v2-dev/registry/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::454089853750:role/scaut-v2-dev/scaut-v2-dev-SecretsManager"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "registry-config" {
+  name        = "scaut-v2-dev-secrets-manager-registry-config"
+  description = "Allows the Kubernetes Secrets Manager to read docker registry config"
+  path        = "/secrets/scaut-v2-dev/"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -218,22 +271,53 @@ resource "aws_iam_role_policy_attachment" "registry-secrets" {
   policy_arn = aws_iam_policy.registry-secrets.arn
 }
 
+resource "aws_iam_role_policy_attachment" "registry-config" {
+  role       = aws_iam_role.registry-config.name
+  policy_arn = aws_iam_policy.registry-config.arn
+}
+
 resource "aws_secretsmanager_secret" "docker-registry-secret" {
-    name        = "scaut-v2-dev/registry/docker-registry-secret"
-    description = "Credentials for running a docker registry"
+  name        = "scaut-v2-dev/registry/docker-registry-secret"
+  description = "Credentials for running a docker registry"
+}
+
+resource "aws_secretsmanager_secret" "docker-registry-config" {
+  name        = "scaut-v2-dev/docker-registry-config"
+  description = "Credentials for connecting to the internal docker registry"
+}
+
+resource "aws_secretsmanager_secret_version" "docker-registry-config" {
+  secret_id     = aws_secretsmanager_secret.docker-registry-config.id
+  secret_string = jsonencode(local.docker_registry_config)
 }
 
 resource "aws_secretsmanager_secret_version" "docker-registry-secret" {
-    secret_id     = aws_secretsmanager_secret.docker-registry-secret.id
-    secret_string = jsonencode(local.docker_registry_secret)
+  secret_id     = aws_secretsmanager_secret.docker-registry-secret.id
+  secret_string = jsonencode(local.docker_registry_secret)
 }
 
 data "kustomization" "jenkins" {
-    path = "jenkins"
+  path = "jenkins"
 }
 
 resource "kustomization_resource" "jenkins" {
-    for_each = data.kustomization.jenkins.ids
+  for_each = data.kustomization.jenkins.ids
 
-    manifest = data.kustomization.jenkins.manifests[each.value]
+  manifest = data.kustomization.jenkins.manifests[each.value]
+}
+
+resource "kubernetes_namespace" "registry" {
+    metadata {
+        name = "registry"
+    }
+}
+
+data "kustomization" "registry" {
+  path = "registry"
+}
+
+resource "kustomization_resource" "registry" {
+  for_each = data.kustomization.registry.ids
+
+  manifest = data.kustomization.registry.manifests[each.value]
 }
