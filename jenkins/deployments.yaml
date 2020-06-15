@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: jenkins
-          image: jenkins/jenkins:2.237
+          image: jenkins/jenkins:2.240
           ports:
             - containerPort: 8080
               protocol: TCP
@@ -37,6 +37,8 @@ spec:
           envFrom:
             - secretRef:
                 name: google-oauth
+            - configMapRef:
+                name: build-environment
           env:
             - name: JAVA_OPTS
               value: "-Dhudson.TcpSlaveAgentListener.hostName=jenkins"

@@ -4,3 +4,4 @@ metadata:
   name: build-environment
 data:
   OPENSHIFT_CLUSTER_SUFFIX: vitalbeats.dev
+  KUBERNETES_CLUSTER: "true"
