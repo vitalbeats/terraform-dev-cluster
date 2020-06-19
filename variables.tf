@@ -32,3 +32,19 @@ variable "pypi_password" {
 variable "registry_ha_secret" {
     type    = string
 }
+
+variable "pull_request_postgresql_database_name" {
+    type    = string
+}
+
+variable "pull_request_postgresql_database_username" {
+    type    = string
+}
+
+variable "pull_request_postgresql_database_password" {
+    type    = string
+}
+
+variable "pull_request_postgresql_database_admin_password" {
+    type    = string
+}

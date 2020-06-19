@@ -10,3 +10,9 @@ pypi_password = "string"
 
 # HA shared secret for registry
 registry_ha_secret = "string"
+
+# Credentials for pull request PostgreSQL instance
+pull_request_postgresql_database_name = "string"
+pull_request_postgresql_database_username = "string"
+pull_request_postgresql_database_password = "string"
+pull_request_postgresql_database_admin_password = "string"

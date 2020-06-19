@@ -6,6 +6,7 @@ resources:
   - deployments.yaml
   - ingresses.yaml
   - pvcs.yaml
+  - cluster-roles.yaml
   - role-bindings.yaml
   - roles.yaml
   - secrets.yaml

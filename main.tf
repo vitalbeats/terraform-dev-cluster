@@ -88,6 +88,13 @@ locals {
     docker_registry_config = {
       ".dockerconfigjson" = "${file("${path.module}/input/registry-config.json")}"
     }
+
+    pull_request_postgresql_secret = {
+      POSTGRESQL_DATABASE       = var.pull_request_postgresql_database_name,
+      POSTGRESQL_USER           = var.pull_request_postgresql_database_username,
+      POSTGRESQL_PASSWORD       = var.pull_request_postgresql_database_password,
+      POSTGRESQL_ADMIN_PASSWORD = var.pull_request_postgresql_database_admin_password,
+    }
 }
 
 resource "aws_iam_policy" "jenkins-secrets" {
@@ -320,4 +327,66 @@ resource "kustomization_resource" "registry" {
   for_each = data.kustomization.registry.ids
 
   manifest = data.kustomization.registry.manifests[each.value]
+}
+
+resource "aws_iam_policy" "pull-request-postgresql-secret" {
+    name        = "scaut-v2-dev-PullRequestPostgreSQLSecrets"
+    description = "Secrets for PostgreSQL databases in pull requests"
+    path        = "/scaut-v2-dev/"
+
+    policy =<<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetResourcePolicy",
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:ListSecretVersionIds"
+      ],
+      "Resource": [
+        "arn:aws:secretsmanager:eu-west-1:454089853750:secret:scaut-v2-dev/pull-request/postgresql*"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "pull-request-postgresql-secret" {
+  name        = "scaut-v2-dev-secrets-manager-pull-request-postgresql"
+  description = "Allows the Kubernetes Secrets Manager to read secrets for PostgreSQL databases in pull requests"
+  path        = "/secrets/scaut-v2-dev/pull-request/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::454089853750:role/scaut-v2-dev/scaut-v2-dev-SecretsManager"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "pull-request-postgresql-secret" {
+  role       = aws_iam_role.pull-request-postgresql-secret.name
+  policy_arn = aws_iam_policy.pull-request-postgresql-secret.arn
+}
+
+resource "aws_secretsmanager_secret" "pull-request-postgresql-secret" {
+  name        = "scaut-v2-dev/pull-request/postgresql"
+  description = "Secrets for PostgreSQL databases in pull requests"
+}
+
+resource "aws_secretsmanager_secret_version" "pull-request-postgresql-secret" {
+  secret_id     = aws_secretsmanager_secret.pull-request-postgresql-secret.id
+  secret_string = jsonencode(local.pull_request_postgresql_secret)
 }
