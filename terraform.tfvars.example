@@ -16,3 +16,12 @@ pull_request_postgresql_database_name = "string"
 pull_request_postgresql_database_username = "string"
 pull_request_postgresql_database_password = "string"
 pull_request_postgresql_database_admin_password = "string"
+
+# Credentials for the Gateway API for pull requests
+pull_request_gateway_api_key = "string"
+
+# Credentials for pull request web services
+pull_request_jwt_key = "string"
+
+# Credentials for Erlang cookies for pull requests
+pull_request_erlang_cookie_iris = "string"

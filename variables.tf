@@ -48,3 +48,15 @@ variable "pull_request_postgresql_database_password" {
 variable "pull_request_postgresql_database_admin_password" {
     type    = string
 }
+
+variable "pull_request_gateway_api_key" {
+    type    = string
+}
+
+variable "pull_request_jwt_key" {
+    type    = string
+}
+
+variable "pull_request_erlang_cookie_iris" {
+    type    = string
+}
