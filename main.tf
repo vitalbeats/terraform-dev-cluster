@@ -23,10 +23,11 @@ provider "null" {
 
 module "cluster" {
   source  = "vitalbeats/cluster/eks"
-  version = "0.1.0-beta.27"
+  version = "0.1.0-beta.30"
 
-  cluster-name    = "scaut-v2-dev"
-  ingress-acm-arn = "arn:aws:acm:eu-west-1:454089853750:certificate/300523fe-fe6f-49a0-9dbe-14ec94dc93cd"
+  cluster-name       = "scaut-v2-dev"
+  enable-letsencrypt = true
+  letsencrypt-email  = "engineering@vitalbeats.com"
 }
 
 provider "kubernetes" {
