@@ -117,6 +117,28 @@ resource "aws_iam_policy" "jenkins-secrets" {
 EOF
 }
 
+resource "aws_iam_policy" "jenkins-params" {
+    name        = "scaut-v2-dev-JenkinsParams"
+    description = "Parameters used by Jenkins in development"
+    path        = "/scaut-v2-dev/"
+
+    policy =<<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "ssm:GetParameter",
+      "Resource": [
+        "arn:aws:ssm:eu-west-1:454089853750:parameter/scaut-v2-dev/openshift-build/*"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+
 resource "aws_iam_role" "jenkins-secrets" {
     name        = "scaut-v2-dev-secrets-manager-jenkins"
     description = "Allows the Kubernetes Secrets Manager to read Jenkins secrets"
@@ -143,6 +165,11 @@ resource "aws_iam_role_policy_attachment" "jenkins-secrets" {
   policy_arn = aws_iam_policy.jenkins-secrets.arn
 }
 
+resource "aws_iam_role_policy_attachment" "jenkins-params" {
+  role       = aws_iam_role.jenkins-secrets.name
+  policy_arn = aws_iam_policy.jenkins-params.arn
+}
+
 resource "aws_secretsmanager_secret" "jenkins-google-oauth" {
     name        = "scaut-v2-dev/openshift-build/jenkins-google-oauth"
     description = "Allows GSuite login for Jenkins"
@@ -153,14 +180,11 @@ resource "aws_secretsmanager_secret_version" "jenkins-google-oauth" {
     secret_string = jsonencode(local.google_oauth)
 }
 
-resource "aws_secretsmanager_secret" "jenkins-ssh-privatekey" {
-    name        = "scaut-v2-dev/openshift-build/jenkins-ssh-privatekey"
+resource "aws_ssm_parameter" "jenkins-ssh-privatekey" {
+    name        = "/scaut-v2-dev/openshift-build/jenkins-ssh-privatekey"
     description = "SSH key for Git in Jenkins"
-}
-
-resource "aws_secretsmanager_secret_version" "jenkins-ssh-privatekey" {
-    secret_id     = aws_secretsmanager_secret.jenkins-ssh-privatekey.id
-    secret_string = jsonencode("${file("${path.module}/input/ssh-privatekey")}")
+    type        = "SecureString"
+    value       =  file("${path.module}/input/ssh-privatekey")
 }
 
 resource "aws_secretsmanager_secret_version" "jenkins-pypi-config" {
