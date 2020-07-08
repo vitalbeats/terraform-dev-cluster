@@ -9,10 +9,10 @@ metadata:
 spec:
   tls:
     - hosts:
-        - jenkins-aws.vitalbeats.dev
+        - jenkins.vitalbeats.dev
       secretName: jenkins-tls
   rules:
-    - host: jenkins-aws.vitalbeats.dev
+    - host: jenkins.vitalbeats.dev
       http:
         paths:
           - backend:

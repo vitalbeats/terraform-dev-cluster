@@ -6,6 +6,6 @@ Jenkins.instance.injector.getInstance(jenkins.security.s2m.AdminWhitelistRule.cl
 Jenkins.instance.setNumExecutors(0)
 
 def jlc = JenkinsLocationConfiguration.get()
-jlc.setUrl("https://jenkins-aws.vitalbeats.dev")
+jlc.setUrl("https://jenkins.vitalbeats.dev")
 jlc.setAdminAddress("[Vital Beats Engineering] <engineering@vitalbeats.com>")
 jlc.save() 
