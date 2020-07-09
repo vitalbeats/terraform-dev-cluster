@@ -66,3 +66,17 @@ subjects:
   - kind: ServiceAccount
     name: jenkins
     namespace: default
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: jenkins-crb-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: manage-cluster-role-bindings
+subjects:
+  - kind: ServiceAccount
+    name: jenkins
+    namespace: default
