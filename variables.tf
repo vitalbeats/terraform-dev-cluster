@@ -32,3 +32,7 @@ variable "pypi_password" {
 variable "registry_ha_secret" {
     type    = string
 }
+
+variable "pull_request_service_secret" {
+    type   = string
+}

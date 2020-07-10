@@ -10,3 +10,6 @@ pypi_password = "string"
 
 # HA shared secret for registry
 registry_ha_secret = "string"
+
+# Secret for the Pull Request Service webhook
+pull_request_service_secret = "string"

@@ -69,9 +69,9 @@ resource "kubernetes_secret" "jenkins-github" {
 
 locals {
     google_oauth = {
-        GOOGLE_CLIENT_ID      = var.google_client_id
-        GOOGLE_CLIENT_SECRET  = var.google_client_secret
-        GOOGLE_CLIENT_DOMAINS = var.google_client_domains
+      GOOGLE_CLIENT_ID      = var.google_client_id
+      GOOGLE_CLIENT_SECRET  = var.google_client_secret
+      GOOGLE_CLIENT_DOMAINS = var.google_client_domains
     }
 
     pypi_config = {
@@ -88,6 +88,10 @@ locals {
 
     docker_registry_config = {
       ".dockerconfigjson" = "${file("${path.module}/input/registry-config.json")}"
+    }
+
+    pull_request_service_secret = {
+      webhook = var.pull_request_service_secret
     }
 }
 
@@ -345,4 +349,107 @@ resource "kustomization_resource" "registry" {
   for_each = data.kustomization.registry.ids
 
   manifest = data.kustomization.registry.manifests[each.value]
+}
+
+resource "aws_iam_policy" "pull-request-service-secrets" {
+    name        = "scaut-v2-dev-PullRequestServiceSecrets"
+    description = "Secrets used by the pull-request-service"
+    path        = "/scaut-v2-dev/"
+
+    policy =<<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetResourcePolicy",
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:ListSecretVersionIds"
+      ],
+      "Resource": [
+        "arn:aws:secretsmanager:eu-west-1:454089853750:secret:scaut-v2-dev/pull-request-service/*"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "pull-request-service-internal-registry" {
+    name        = "scaut-v2-dev-PullRequestServiceInternalRegistry"
+    description = "Secrets used by the pull-request-service for pulling internal registry images"
+    path        = "/scaut-v2-dev/"
+
+    policy =<<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetResourcePolicy",
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:ListSecretVersionIds"
+      ],
+      "Resource": [
+        "arn:aws:secretsmanager:eu-west-1:454089853750:secret:scaut-v2-dev/docker-registry-config*"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "pull-request-service-secrets" {
+  name        = "scaut-v2-dev-secrets-manager-pull-request-service"
+  description = "Allows the Kubernetes Secrets Manager to read pull-request-service secrets"
+  path        = "/secrets/scaut-v2-dev/pull-request-service/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::454089853750:role/scaut-v2-dev/scaut-v2-dev-SecretsManager"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "pull-request-service-secrets" {
+  role       = aws_iam_role.pull-request-service-secrets.name
+  policy_arn = aws_iam_policy.pull-request-service-secrets.arn
+}
+
+resource "aws_iam_role_policy_attachment" "pull-request-service-internal-registry" {
+  role       = aws_iam_role.pull-request-service-secrets.name
+  policy_arn = aws_iam_policy.pull-request-service-internal-registry.arn
+}
+
+resource "aws_secretsmanager_secret" "pull-request-service-secret" {
+  name        = "scaut-v2-dev/pull-request-service/pull-request-service-secret"
+  description = "Credentials for running a docker registry"
+}
+
+resource "aws_secretsmanager_secret_version" "pull-request-service-secret" {
+  secret_id     = aws_secretsmanager_secret.pull-request-service-secret.id
+  secret_string = jsonencode(local.pull_request_service_secret)
+}
+
+resource "kubernetes_namespace" "pull-request-service" {
+    metadata {
+        name = "pull-request-service"
+
+        annotations = {
+          "iam.amazonaws.com/permitted" = "arn:aws:iam::454089853750:role/secrets/scaut-v2-dev/pull-request-service/scaut-v2-dev-secrets-manager-pull-request-service"
+        }
+    }
 }
