@@ -1,0 +1,7 @@
+namespace: openshift-build
+resources:
+ - deployments.yaml
+ - ingresses.yaml
+ - pvcs.yaml
+ - secrets.yaml
+ - services.yaml

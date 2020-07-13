@@ -253,10 +253,57 @@ resource "aws_iam_policy" "registry-config" {
 EOF
 }
 
+resource "aws_iam_policy" "pypi-auth-secrets" {
+    name        = "scaut-v2-dev-PyPIAuthSecrets"
+    description = "Secrets used to control who has access to PyPI"
+    path        = "/scaut-v2-dev/"
+
+    policy =<<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetResourcePolicy",
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:ListSecretVersionIds"
+      ],
+      "Resource": [
+        "arn:aws:secretsmanager:eu-west-1:454089853750:secret:scaut-v2-dev/openshift-build/pypi-auth*"
+      ]
+    }
+  ]
+}
+EOF
+}
+
 resource "aws_iam_role" "registry-secrets" {
   name        = "scaut-v2-dev-secrets-manager-registry"
   description = "Allows the Kubernetes Secrets Manager to read docker registry secrets"
   path        = "/secrets/scaut-v2-dev/registry/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::454089853750:role/scaut-v2-dev/scaut-v2-dev-SecretsManager"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "pypi-auth-secrets" {
+  name        = "scaut-v2-dev-secrets-manager-pypi"
+  description = "Allows the Kubernetes Secrets Manager to read PyPI Server auth secrets"
+  path        = "/secrets/scaut-v2-dev/openshift-build/"
 
   assume_role_policy = <<EOF
 {
@@ -300,6 +347,11 @@ resource "aws_iam_role_policy_attachment" "registry-secrets" {
   policy_arn = aws_iam_policy.registry-secrets.arn
 }
 
+resource "aws_iam_role_policy_attachment" "pypi-auth-secrets" {
+  role       = aws_iam_role.pypi-auth-secrets.name
+  policy_arn = aws_iam_policy.pypi-auth-secrets.arn
+}
+
 resource "aws_iam_role_policy_attachment" "registry-config" {
   role       = aws_iam_role.registry-config.name
   policy_arn = aws_iam_policy.registry-config.arn
@@ -333,6 +385,16 @@ resource "kustomization_resource" "jenkins" {
   for_each = data.kustomization.jenkins.ids
 
   manifest = data.kustomization.jenkins.manifests[each.value]
+}
+
+data "kustomization" "pypiserver" {
+  path = "pypiserver"
+}
+
+resource "kustomization_resource" "pypiserver" {
+  for_each = data.kustomization.pypiserver.ids
+
+  manifest = data.kustomization.pypiserver.manifests[each.value]
 }
 
 resource "kubernetes_namespace" "registry" {

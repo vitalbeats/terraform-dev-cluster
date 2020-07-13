@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: pypiserver
+  name: pypiserver
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: pypiserver
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: pypiserver
+    spec:
+      securityContext:
+        fsGroup: 3020
+      containers:
+        - args:
+            - '-a'
+            - 'update,download,list'
+            - '-P'
+            - /srv/data/config/htpasswd
+            - /srv/data/packages
+          image: 'pypiserver/pypiserver:latest'
+          imagePullPolicy: Always
+          name: pypiserver
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 250m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+          volumeMounts:
+            - mountPath: /srv/data/packages
+              name: package-storage
+            - mountPath: /srv/data/config
+              name: htpasswd
+              readOnly: true
+      volumes:
+        - name: package-storage
+          persistentVolumeClaim:
+            claimName: pypiserver-data
+        - name: htpasswd
+          secret:
+            defaultMode: 420
+            secretName: pypi-auth
