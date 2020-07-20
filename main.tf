@@ -21,6 +21,10 @@ provider "null" {
   version = "~> 2.1"
 }
 
+provider "random" {
+  version = "~> 2.2"
+}
+
 module "cluster" {
   source  = "vitalbeats/cluster/eks"
   version = "0.1.0-beta.30"
@@ -514,4 +518,117 @@ resource "kubernetes_namespace" "pull-request-service" {
           "iam.amazonaws.com/permitted" = "arn:aws:iam::454089853750:role/secrets/scaut-v2-dev/pull-request-service/scaut-v2-dev-secrets-manager-pull-request-service"
         }
     }
+}
+
+resource "kubernetes_namespace" "nextcloud" {
+    metadata {
+        name = "nextcloud"
+
+        annotations = {
+          "iam.amazonaws.com/permitted" = "arn:aws:iam::454089853750:role/secrets/scaut-v2-dev/nextcloud/scaut-v2-dev-secrets-manager-nextcloud"
+        }
+    }
+}
+
+data "kustomization" "nextcloud" {
+  path = "nextcloud"
+}
+
+resource "kustomization_resource" "nextcloud" {
+  for_each = data.kustomization.nextcloud.ids
+
+  manifest = data.kustomization.nextcloud.manifests[each.value]
+}
+
+resource "random_string" "nextcloud-mysql-root-password" {
+    length = 16
+    special = false
+}
+
+resource "random_string" "nextcloud-mysql-user" {
+    length = 16
+    special = false
+}
+
+resource "random_string" "nextcloud-mysql-password" {
+    length = 16
+    special = false
+}
+
+resource "aws_secretsmanager_secret" "nextcloud-mysql-root" {
+  name        = "scaut-v2-dev/nextcloud/nextcloud-mysql-root"
+  description = "Credentials for the MySQL root password for NEXTCloud"
+}
+
+resource "aws_secretsmanager_secret_version" "nextcloud-mysql-root" {
+  secret_id     = aws_secretsmanager_secret.nextcloud-mysql-root.id
+  secret_string = jsonencode({
+    MYSQL_ROOT_PASSWORD = random_string.nextcloud-mysql-root-password.result
+  })
+}
+
+resource "aws_secretsmanager_secret" "nextcloud-mysql-user" {
+  name        = "scaut-v2-dev/nextcloud/nextcloud-mysql-user"
+  description = "Credentials for the MySQL user for NEXTCloud"
+}
+
+resource "aws_secretsmanager_secret_version" "nextcloud-mysql-user" {
+  secret_id     = aws_secretsmanager_secret.nextcloud-mysql-user.id
+  secret_string = jsonencode({ 
+    MYSQL_PASSWORD = random_string.nextcloud-mysql-password.result,
+    MYSQL_USER     = random_string.nextcloud-mysql-user.result,
+    MYSQL_DATABASE = "nextcloud"
+  })
+}
+
+resource "aws_iam_policy" "nextcloud-secrets" {
+    name        = "scaut-v2-dev-NEXTCloud"
+    description = "Allows the Kubernetes Secrets Manager to read nextcloud secrets"
+    path        = "/scaut-v2-dev/"
+
+    policy =<<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetResourcePolicy",
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:ListSecretVersionIds"
+      ],
+      "Resource": [
+        "arn:aws:secretsmanager:eu-west-1:454089853750:secret:scaut-v2-dev/nextcloud/*"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "nextcloud-secrets" {
+  name        = "scaut-v2-dev-secrets-manager-nextcloud"
+  description = "Allows the Kubernetes Secrets Manager to read nextcloud secrets"
+  path        = "/secrets/scaut-v2-dev/nextcloud/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::454089853750:role/scaut-v2-dev/scaut-v2-dev-SecretsManager"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "nextcloud-secrets" {
+  role       = aws_iam_role.nextcloud-secrets.name
+  policy_arn = aws_iam_policy.nextcloud-secrets.arn
 }
