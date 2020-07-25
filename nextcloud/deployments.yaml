@@ -1,0 +1,183 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      securityContext:
+        fsGroup: 3306
+      containers:
+        - name: mariadb
+          image: mariadb:10.5.4
+          args:
+            - "--transaction-isolation=READ-COMMITTED"
+            - "--binlog-format=ROW"
+          envFrom:
+            - secretRef:
+                name: mysql-root-password
+            - secretRef:
+                name: mysql-user
+          ports:
+            - containerPort: 3306
+              name: mysql
+              protocol: TCP
+          volumeMounts:
+            - name: mariadb-storage
+              mountPath: /var/lib/mysql
+          resources:
+            limits:
+              cpu: 500m
+              memory: 2G
+            requests:
+              cpu: 500m
+              memory: 2G
+      volumes:
+        - name: mariadb-storage
+          persistentVolumeClaim:
+            claimName: nextcloud-mariadb
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: onlyoffice
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: onlyoffice
+  template:
+    metadata:
+      labels:
+        app: onlyoffice
+    spec:
+      containers:
+        - name: onlyoffice
+          image: onlyoffice/documentserver:latest
+          ports:
+            - containerPort: 80
+              name: web
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 500m
+              memory: 1G
+            requests:
+              cpu: 500m
+              memory: 1G
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:latest
+          ports:
+            - containerPort: 6379
+              name: redis
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512M
+            requests:
+              cpu: 500m
+              memory: 512M
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nextcloud
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: nextcloud
+  template:
+    metadata:
+      labels:
+        app: nextcloud
+    spec:
+      securityContext:
+        fsGroup: 33
+      containers:
+        - name: nextcloud
+          image: nextcloud:latest
+          ports:
+            - containerPort: 80
+              name: web
+              protocol: TCP
+          env:
+            - name: MYSQL_HOST
+              value: mariadb
+            - name: REDIS_HOST
+              value: redis
+            - name: OVERWRITEHOST
+              value: cloud.vitalbeats.dev
+          envFrom:
+            - secretRef:
+                name: mysql-user
+            - secretRef:
+                name: nextcloud-admin
+          resources:
+            limits:
+              cpu: 500m
+              memory: 1G
+            requests:
+              cpu: 500m
+              memory: 1G
+          volumeMounts:
+            - mountPath: /var/www/html
+              name: nextcloud-core
+            - mountPath: /var/www/html/custom_apps
+              name: nextcloud-apps
+            - mountPath: /var/www/html/config
+              name: nextcloud-config
+            - mountPath: /var/www/html/data
+              name: nextcloud-data
+      volumes:
+        - name: nextcloud-core
+          persistentVolumeClaim:
+            claimName: nextcloud-core
+        - name: nextcloud-apps
+          persistentVolumeClaim:
+            claimName: nextcloud-apps
+        - name: nextcloud-config
+          persistentVolumeClaim:
+            claimName: nextcloud-config
+        - name: nextcloud-data
+          persistentVolumeClaim:
+            claimName: nextcloud-data

@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: rsync
+  namespace: nextcloud
+spec:
+  containers:
+    - name: rsync
+      image: eeacms/rsync:latest
+      args:
+        - server
+      resources:
+        limits:
+          memory: "128Mi"
+          cpu: "500m"
+      env:
+        - name: SSH_AUTH_KEY_1
+          value: "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEA9dSOMUse18OyE39XZCRl030uxAjutN023h2e2iidxiDd7XWhuLH72j1aBgujRNn6awQd8MkaqYsRPtzwBBuLtsaTQF4zx7e5ZE6+qi2HDqGT0KJtDY8uc6ZYtUr8/YtELqWINWyw+VgSf8IquWEJy0ICvQLeKncnHtXc9zRh6+gtsTNpyYAbRW3FugRKFGnp61lIaD9vu8gtug2LgmrlEY1fif1YoJmqRajQLWukgEu8gQeI2ntOmNfih+GMI/uJno6Rth+eURqn13FpvJj+j1JazCFHeAFwW9r96e+rVCC0Ynt5jQ3uPIQz3JxBREN08Z66BJPMNuxeUIdJFDpkLQ== RSA-1024"
+      ports:
+        - containerPort: 22
+      volumeMounts:
+        - mountPath: /data 
+          name: nextcloud-data
+  volumes:
+    - name: nextcloud-data
+      persistentVolumeClaim:
+        claimName: nextcloud-data

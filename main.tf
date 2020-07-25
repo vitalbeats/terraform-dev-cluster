@@ -555,6 +555,11 @@ resource "random_string" "nextcloud-mysql-password" {
     special = false
 }
 
+resource "random_string" "nextcloud-admin-password" {
+    length = 24
+    special = false
+}
+
 resource "aws_secretsmanager_secret" "nextcloud-mysql-root" {
   name        = "scaut-v2-dev/nextcloud/nextcloud-mysql-root"
   description = "Credentials for the MySQL root password for NEXTCloud"
@@ -578,6 +583,19 @@ resource "aws_secretsmanager_secret_version" "nextcloud-mysql-user" {
     MYSQL_PASSWORD = random_string.nextcloud-mysql-password.result,
     MYSQL_USER     = random_string.nextcloud-mysql-user.result,
     MYSQL_DATABASE = "nextcloud"
+  })
+}
+
+resource "aws_secretsmanager_secret" "nextcloud-admin" {
+  name        = "scaut-v2-dev/nextcloud/nextcloud-admin"
+  description = "Credentials for the Admin user for NEXTCloud"
+}
+
+resource "aws_secretsmanager_secret_version" "nextcloud-admin" {
+  secret_id     = aws_secretsmanager_secret.nextcloud-admin.id
+  secret_string = jsonencode({ 
+    NEXTCLOUD_ADMIN_USER     = "nextcloud",
+    NEXTCLOUD_ADMIN_PASSWORD = random_string.nextcloud-admin-password.result,
   })
 }
 
