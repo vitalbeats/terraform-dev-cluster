@@ -154,11 +154,11 @@ spec:
                 name: nextcloud-admin
           resources:
             limits:
-              cpu: 500m
-              memory: 1G
+              cpu: "1"
+              memory: 2G
             requests:
-              cpu: 500m
-              memory: 1G
+              cpu: "1"
+              memory: 2G
           volumeMounts:
             - mountPath: /var/www/html
               name: nextcloud-core
