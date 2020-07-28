@@ -27,9 +27,10 @@ provider "random" {
 
 module "cluster" {
   source  = "vitalbeats/cluster/eks"
-  version = "0.1.0-beta.30"
+  version = "0.1.0-beta.33"
 
   cluster-name       = "scaut-v2-dev"
+  ec2-ssh-key        = "stephen.badger"
   enable-letsencrypt = true
   letsencrypt-email  = "engineering@vitalbeats.com"
 }
