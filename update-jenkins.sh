@@ -19,4 +19,5 @@ git add jenkins/deployments.yaml
 git commit -m "Update to Jenkins ${VERSION}"
 git push ${REMOTE} master
 git checkout ${CURRENT_BRANCH}
+git branch -d update-jenkins-${VERSION}
 git stash apply
