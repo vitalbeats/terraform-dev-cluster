@@ -27,3 +27,9 @@ This repository assumes usage of an [S3 backend](https://www.terraform.io/docs/b
 
 ## Running
 To run this repository, you first must set up some secrets and credentials for the cluster to use. Create `terraform.tfvars` based upon `terraform.tfvars.example`. Once done, you can run the repository with `terraform plan` or `terraform apply` as usual.
+
+## Common Operations
+There are various services in the cluster which need upgrading. Various scripts exist to make this easier.
+
+### Jenkins
+Run `./update-jenkins.sh <version>` which will upgrade Jenkins and update the master branch to reflect the new version.
