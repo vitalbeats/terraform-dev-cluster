@@ -36,3 +36,11 @@ variable "registry_ha_secret" {
 variable "pull_request_service_secret" {
     type   = string
 }
+
+variable "datadog_api_key" {
+    type   = string
+}
+
+variable "datadog_app_key" {
+    type   = string
+}
