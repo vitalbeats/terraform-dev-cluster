@@ -135,7 +135,7 @@ spec:
         fsGroup: 33
       containers:
         - name: nextcloud
-          image: nextcloud:latest
+          image: nextcloud:19.0.2
           ports:
             - containerPort: 80
               name: web
