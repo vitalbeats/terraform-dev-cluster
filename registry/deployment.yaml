@@ -31,7 +31,7 @@ spec:
         runAsUser: 1000
       containers:
         - name: docker-registry
-          image: registry:2
+          image: registry:2.7.1
           imagePullPolicy: IfNotPresent
           command:
           - /bin/registry
