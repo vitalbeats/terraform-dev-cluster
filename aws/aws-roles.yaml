@@ -1,0 +1,6 @@
+- rolearn: arn:aws:iam::454089853750:role/scaut-v2-dev-AWSServices
+  username: system:node:{{EC2PrivateDNSName}}
+  groups:
+    - system:bootstrappers
+    - system:nodes
+  

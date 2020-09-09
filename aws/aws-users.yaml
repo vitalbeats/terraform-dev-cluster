@@ -1,0 +1,8 @@
+- userarn: arn:aws:iam::454089853750:user/jan.gnezda@vitalbeats.com
+  username: jan.gnezda
+  groups:
+    - system:masters
+- userarn: arn:aws:iam::454089853750:user/stephen.badger@vitalbeats.com
+  username: stephen.badger
+  groups:
+    - system:masters

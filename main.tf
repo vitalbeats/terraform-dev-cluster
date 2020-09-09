@@ -49,6 +49,18 @@ provider "kustomization" {
 
 data "aws_caller_identity" "current" {}
 
+resource "kubernetes_config_map" "aws-auth" {
+  metadata {
+    name = "aws-auth"
+    namespace = "kube-system"
+  }
+
+  data = {
+    mapRoles = file("${path.module}/aws/aws-roles.yaml")
+    mapUsers = file("${path.module}/aws/aws-users.yaml")
+  }
+}
+
 resource "kubernetes_namespace" "jenkins" {
     metadata {
         name = "openshift-build"
