@@ -703,7 +703,7 @@ EOF
 }
 
 resource "aws_iam_role" "jenkins" {
-  path        = "/scaut-v2-dev/"
+  path        = "/"
   name        = "scaut-v2-dev-jenkins"
   description = "Allows Jenkins to interact with AWS"
 
