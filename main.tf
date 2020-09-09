@@ -654,3 +654,69 @@ resource "aws_iam_role_policy_attachment" "nextcloud-secrets" {
   role       = aws_iam_role.nextcloud-secrets.name
   policy_arn = aws_iam_policy.nextcloud-secrets.arn
 }
+
+resource "aws_iam_policy" "push-ecr-images" {
+  policy =<<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:ListTagsForResource",
+                "ecr:UploadLayerPart",
+                "ecr:BatchDeleteImage",
+                "ecr:ListImages",
+                "ecr:PutImage",
+                "ecr:UntagResource",
+                "ecr:BatchGetImage",
+                "ecr:CompleteLayerUpload",
+                "ecr:DescribeImages",
+                "ecr:TagResource",
+                "ecr:DescribeRepositories",
+                "ecr:InitiateLayerUpload",
+                "ecr:BatchCheckLayerAvailability"
+            ],
+            "Resource": "arn:aws:ecr:eu-west-1:454089853750:repository/*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ecr:GetAuthorizationToken",
+            "Resource": "*"
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role" "jenkins" {
+  path        = "/scaut-v2-dev/"
+  name        = "scaut-v2-dev-jenkins"
+  description = "Allows Jenkins to interact with AWS"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${module.cluster.cluster_oidc_provider}"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "${module.cluster.cluster_oidc_provider}:sub": "system:serviceaccount:jenkins:jenkins"
+        }
+      }
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "push-ecr-images" {
+  role       = aws_iam_role.jenkins.name
+  policy_arn = aws_iam_policy.push-ecr-images.arn
+}
