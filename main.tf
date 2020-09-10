@@ -702,29 +702,8 @@ resource "aws_iam_policy" "push-ecr-images" {
 EOF
 }
 
-resource "aws_iam_role" "push-ecr-images" {
-  name        = "scaut-v2-dev-push-ecr-images"
-  description = "Allows Jenkins to push ECR images"
-  path        = "/role/jenkins/"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::454089853750:role/scaut-v2-dev-jenkins"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
 resource "aws_iam_role_policy_attachment" "push-ecr-images" {
-  role       = aws_iam_role.push-ecr-images.name
+  role       = aws_iam_role.jenkins.name
   policy_arn = aws_iam_policy.push-ecr-images.arn
 }
 
@@ -743,29 +722,8 @@ resource "aws_iam_policy" "get-eks-config" {
 EOF
 }
 
-resource "aws_iam_role" "get-eks-config" {
-  name        = "scaut-v2-dev-get-eks-config"
-  description = "Allows Jenkins to get EKS configs"
-  path        = "/role/jenkins/"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::454089853750:role/scaut-v2-dev-jenkins"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
 resource "aws_iam_role_policy_attachment" "get-eks-config" {
-  role       = aws_iam_role.get-eks-config.name
+  role       = aws_iam_role.jenkins.name
   policy_arn = aws_iam_policy.get-eks-config.arn
 }
 
@@ -786,27 +744,11 @@ resource "aws_iam_role" "jenkins" {
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "${module.cluster.cluster_oidc_provider}:sub": "system:serviceaccount:jenkins:jenkins"
+          "${module.cluster.cluster_oidc_provider}:sub": "system:serviceaccount:openshift-build:jenkins"
         }
       }
     }
   ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "jenkins" {
-  role  = aws_iam_role.jenkins.id
-  policy =<<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": "sts:AssumeRole",
-            "Resource": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/jenkins/*"
-        }
-    ]
 }
 EOF
 }
