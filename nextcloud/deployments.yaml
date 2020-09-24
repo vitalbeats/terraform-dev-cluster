@@ -51,39 +51,6 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: onlyoffice
-spec:
-  replicas: 1
-  revisionHistoryLimit: 3
-  strategy:
-    type: Recreate
-  selector:
-    matchLabels:
-      app: onlyoffice
-  template:
-    metadata:
-      labels:
-        app: onlyoffice
-    spec:
-      containers:
-        - name: onlyoffice
-          image: onlyoffice/documentserver:latest
-          ports:
-            - containerPort: 80
-              name: web
-              protocol: TCP
-          resources:
-            limits:
-              cpu: 500m
-              memory: 2G
-            requests:
-              cpu: 500m
-              memory: 2G
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
   name: redis
 spec:
   replicas: 1

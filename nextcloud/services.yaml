@@ -29,20 +29,6 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: onlyoffice
-spec:
-  selector:
-    app: onlyoffice
-  ports:
-    - port: 80
-      targetPort: 80
-      name: web
-      protocol: TCP
-
----
-apiVersion: v1
-kind: Service
-metadata:
   name: redis
 spec:
   selector:
