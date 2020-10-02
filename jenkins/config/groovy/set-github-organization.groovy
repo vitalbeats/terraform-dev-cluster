@@ -16,6 +16,7 @@ navigator.traits = [
   new BranchDiscoveryTrait(1), // Exclude branches that are also filed as PRs.
   new OriginPullRequestDiscoveryTrait(1), // Merging the pull request with the current target branch revision.
   new ForkPullRequestDiscoveryTrait(1, new ForkPullRequestDiscoveryTrait.TrustPermission()),  // Allow people in the organisation to update Jenkinsfiles in forks
+  new TagDiscoveryTrait()
 ]
 folder.navigators.replace(navigator)
 Jenkins.instance.save()
