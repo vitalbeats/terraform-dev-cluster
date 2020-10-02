@@ -536,6 +536,29 @@ resource "kubernetes_namespace" "pull-request-service" {
     }
 }
 
+resource "aws_iam_role" "scaut-v2-dev-backup" {
+  name               = "scaut-v2-dev-backup"
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": ["sts:AssumeRole"],
+      "Effect": "allow",
+      "Principal": {
+        "Service": ["backup.amazonaws.com"]
+      }
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "scaut-v2-dev-backup" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup"
+  role       = aws_iam_role.scaut-v2-dev-backup.name
+}
+
 resource "kubernetes_namespace" "nextcloud" {
     metadata {
         name = "nextcloud"
@@ -700,6 +723,36 @@ resource "aws_iam_policy" "push-ecr-images" {
     ]
 }
 EOF
+}
+
+resource "aws_backup_vault" "nextcloud" {
+  name = "nextcloud"
+}
+
+resource "aws_backup_plan" "nextcloud" {
+  name = "nextcloud"
+
+  rule {
+    rule_name         = "daily"
+    target_vault_name = aws_backup_vault.nextcloud.name
+    schedule          = "cron(0 4 * * ? *)"
+
+    lifecycle {
+      delete_after = 30
+    }
+  }
+}
+
+resource "aws_backup_selection" "nextcloud" {
+  iam_role_arn = aws_iam_role.scaut-v2-dev-backup.arn
+  name         = "nextcloud"
+  plan_id      = aws_backup_plan.nextcloud.id
+
+  selection_tag {
+    type  = "STRINGEQUALS"
+    key   = "kubernetes.io/created-for/pvc/namespace"
+    value = "nextcloud"
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "push-ecr-images" {
