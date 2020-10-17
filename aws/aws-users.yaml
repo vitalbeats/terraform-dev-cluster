@@ -6,3 +6,11 @@
   username: stephen.badger
   groups:
     - system:masters
+- userarn: arn:aws:iam::454089853750:user/mikkel.hansen@vitalbeats.com
+  username: mikkel.hansen
+  groups:
+    - system:masters
+- userarn: arn:aws:iam::454089853750:user/christina.villumsen@vitalbeats.com
+  username: christina.villumsen
+  groups:
+    - system:masters
