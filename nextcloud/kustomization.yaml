@@ -4,6 +4,7 @@ namespace: nextcloud
 resources:
  - deployments.yaml
  - ingresses.yaml
+ - networkpolicies.yaml
  - pvcs.yaml
  - secrets.yaml
  - services.yaml
