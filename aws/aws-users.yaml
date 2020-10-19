@@ -14,3 +14,7 @@
   username: christina.villumsen
   groups:
     - system:masters
+- userarn: arn:aws:iam::454089853750:user/kasper.kristensen@vitalbeats.com
+  username: kasper.kristensen
+  groups:
+    - system:masters
