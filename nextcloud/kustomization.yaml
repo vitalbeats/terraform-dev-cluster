@@ -6,5 +6,7 @@ resources:
  - ingresses.yaml
  - networkpolicies.yaml
  - pvcs.yaml
+ - rolebindings.yaml
+ - roles.yaml
  - secrets.yaml
  - services.yaml
