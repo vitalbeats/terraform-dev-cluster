@@ -18,3 +18,7 @@
   username: kasper.kristensen
   groups:
     - system:masters
+- userarn: arn:aws:iam::454089853750:user/mika.jalonen@vitalbeats.com
+  username: mika.jalonen
+  groups:
+    - system:masters
