@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: jenkins
-          image: jenkins/jenkins:2.265
+          image: jenkins/jenkins:2.266
           ports:
             - containerPort: 8080
               protocol: TCP
