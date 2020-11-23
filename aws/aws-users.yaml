@@ -22,3 +22,7 @@
   username: mika.jalonen
   groups:
     - system:masters
+- userarn: arn:aws:iam::454089853750:user/marko.mitranic@vitalbeats.com
+  username: marko.mitranic
+  groups:
+    - system:masters
