@@ -25,9 +25,15 @@ provider "random" {
   version = "~> 2.2"
 }
 
+provider "datadog" {
+  api_key = var.datadog_api_key
+  app_key = var.datadog_app_key
+  api_url = "https://api.datadoghq.eu/"
+}
+
 module "cluster" {
   source  = "vitalbeats/cluster/eks"
-  version = "0.1.0-beta.41"
+  version = "0.1.0-beta.44"
 
   cluster-name       = "scaut-v2-dev"
   ec2-ssh-key        = "stephen.badger"
@@ -36,6 +42,7 @@ module "cluster" {
   datadog-api-key    = var.datadog_api_key
   datadog-app-key    = var.datadog_app_key
   datadog-site       = "datadoghq.eu"
+  datadog-notifier   = "@slack-vitalbeats-devops"
   letsencrypt-email  = "engineering@vitalbeats.com"
 }
 
