@@ -1,28 +1,46 @@
 terraform {
-  backend "s3" {
-    bucket = "vitalbeats-terraform-state"
-    dynamodb_table = "vitalbeats-terraform-state-lock"
-    key    = "terraform-eks/dev"
-    region = "eu-west-1"
-    encrypt = true
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 2.62.0"
+    }
+    local = {
+      source  = "hashicorp/local"
+      version = "~> 1.4"
+    }
+    null = {
+      source  = "hashicorp/null"
+      version = "~> 2.1"
+    }
+    datadog = {
+      source  = "datadog/datadog"
+      version = ">= 2.17.0"
+    }
+    kustomization = {
+      source  = "kbst/kustomization"
+      version = ">= 0.2"
+    }
+    kubernetes = {
+      source = "hashicorp/kubernetes"
+    }
+    random = {
+      source = "hashicorp/random"
+    }
   }
+
+  backend "s3" {
+    bucket         = "vitalbeats-terraform-state"
+    dynamodb_table = "vitalbeats-terraform-state-lock"
+    key            = "terraform-eks/dev"
+    region         = "eu-west-1"
+    encrypt        = true
+  }
+
+  required_version = ">= 0.14"
 }
 
 provider "aws" {
-  version = ">= 2.62.0"
   region = "eu-west-1"
-}
-
-provider "local" {
-  version = "~> 1.4"
-}
-
-provider "null" {
-  version = "~> 2.1"
-}
-
-provider "random" {
-  version = "~> 2.2"
 }
 
 provider "datadog" {
@@ -33,7 +51,7 @@ provider "datadog" {
 
 module "cluster" {
   source  = "vitalbeats/cluster/eks"
-  version = "0.1.0-beta.44"
+  version = "0.1.0-beta.46"
 
   cluster-name       = "scaut-v2-dev"
   ec2-ssh-key        = "stephen.badger"
@@ -47,19 +65,18 @@ module "cluster" {
 }
 
 provider "kubernetes" {
-    version        = "~> 1.11"
-    config_context = "scaut-v2-dev"
+  config_context = "scaut-v2-dev"
 }
 
 provider "kustomization" {
-    kubeconfig_raw = module.cluster.kubeconfig
+  kubeconfig_raw = module.cluster.kubeconfig
 }
 
 data "aws_caller_identity" "current" {}
 
 resource "kubernetes_config_map" "aws-auth" {
   metadata {
-    name = "aws-auth"
+    name      = "aws-auth"
     namespace = "kube-system"
   }
 
@@ -70,65 +87,65 @@ resource "kubernetes_config_map" "aws-auth" {
 }
 
 resource "kubernetes_namespace" "jenkins" {
-    metadata {
-        name = "openshift-build"
-    }
+  metadata {
+    name = "openshift-build"
+  }
 }
 
 resource "kubernetes_secret" "jenkins-github" {
-    metadata {
-        name = "github"
-        namespace = "openshift-build"
+  metadata {
+    name      = "github"
+    namespace = "openshift-build"
 
-        labels = {
-            "jenkins.io/credentials-type" = "usernamePassword"
-        }
-
-        annotations = {
-            "jenkins.io/credentials-description" = "Used to scan GitHub for jobs"
-        }
+    labels = {
+      "jenkins.io/credentials-type" = "usernamePassword"
     }
 
-    data = {
-        username = var.github_username
-        password = var.github_access_token
+    annotations = {
+      "jenkins.io/credentials-description" = "Used to scan GitHub for jobs"
     }
+  }
+
+  data = {
+    username = var.github_username
+    password = var.github_access_token
+  }
 }
 
 locals {
-    google_oauth = {
-      GOOGLE_CLIENT_ID      = var.google_client_id
-      GOOGLE_CLIENT_SECRET  = var.google_client_secret
-      GOOGLE_CLIENT_DOMAINS = var.google_client_domains
-    }
+  google_oauth = {
+    GOOGLE_CLIENT_ID      = var.google_client_id
+    GOOGLE_CLIENT_SECRET  = var.google_client_secret
+    GOOGLE_CLIENT_DOMAINS = var.google_client_domains
+  }
 
-    pypi_config = {
-      "auth.toml"   = "${file("${path.module}/input/auth.toml")}"
-      "config.toml" = "${file("${path.module}/input/config.toml")}"
-      password      = var.pypi_password
-      username      = var.pypi_username
-    }
+  pypi_config = {
+    "auth.toml"   = file("${path.module}/input/auth.toml")
+    "config.toml" = file("${path.module}/input/config.toml")
+    password      = var.pypi_password
+    username      = var.pypi_username
+  }
 
-    docker_registry_secret = {
-      htpasswd       = "${file("${path.module}/input/registry-htpasswd")}"
-      haSharedSecret = var.registry_ha_secret
-    }
+  docker_registry_secret = {
+    htpasswd       = file("${path.module}/input/registry-htpasswd")
+    haSharedSecret = var.registry_ha_secret
+  }
 
-    docker_registry_config = {
-      ".dockerconfigjson" = "${file("${path.module}/input/registry-config.json")}"
-    }
+  docker_registry_config = {
+    ".dockerconfigjson" = file("${path.module}/input/registry-config.json")
+  }
 
-    pull_request_service_secret = {
-      webhook = var.pull_request_service_secret
-    }
+  pull_request_service_secret = {
+    webhook = var.pull_request_service_secret
+  }
 }
 
 resource "aws_iam_policy" "jenkins-secrets" {
-    name        = "scaut-v2-dev-JenkinsSecrets"
-    description = "Secrets used by Jenkins in development"
-    path        = "/scaut-v2-dev/"
+  name        = "scaut-v2-dev-JenkinsSecrets"
+  description = "Secrets used by Jenkins in development"
+  path        = "/scaut-v2-dev/"
 
-    policy =<<EOF
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -150,11 +167,11 @@ EOF
 }
 
 resource "aws_iam_policy" "jenkins-params" {
-    name        = "scaut-v2-dev-JenkinsParams"
-    description = "Parameters used by Jenkins in development"
-    path        = "/scaut-v2-dev/"
+  name        = "scaut-v2-dev-JenkinsParams"
+  description = "Parameters used by Jenkins in development"
+  path        = "/scaut-v2-dev/"
 
-    policy =<<EOF
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -172,11 +189,11 @@ EOF
 
 
 resource "aws_iam_role" "jenkins-secrets" {
-    name        = "scaut-v2-dev-secrets-manager-jenkins"
-    description = "Allows the Kubernetes Secrets Manager to read Jenkins secrets"
-    path        = "/secrets/scaut-v2-dev/openshift-build/"
+  name        = "scaut-v2-dev-secrets-manager-jenkins"
+  description = "Allows the Kubernetes Secrets Manager to read Jenkins secrets"
+  path        = "/secrets/scaut-v2-dev/openshift-build/"
 
-    assume_role_policy = <<EOF
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -203,38 +220,38 @@ resource "aws_iam_role_policy_attachment" "jenkins-params" {
 }
 
 resource "aws_secretsmanager_secret" "jenkins-google-oauth" {
-    name        = "scaut-v2-dev/openshift-build/jenkins-google-oauth"
-    description = "Allows GSuite login for Jenkins"
+  name        = "scaut-v2-dev/openshift-build/jenkins-google-oauth"
+  description = "Allows GSuite login for Jenkins"
 }
 
 resource "aws_secretsmanager_secret_version" "jenkins-google-oauth" {
-    secret_id     = aws_secretsmanager_secret.jenkins-google-oauth.id
-    secret_string = jsonencode(local.google_oauth)
+  secret_id     = aws_secretsmanager_secret.jenkins-google-oauth.id
+  secret_string = jsonencode(local.google_oauth)
 }
 
 resource "aws_ssm_parameter" "jenkins-ssh-privatekey" {
-    name        = "/scaut-v2-dev/openshift-build/jenkins-ssh-privatekey"
-    description = "SSH key for Git in Jenkins"
-    type        = "SecureString"
-    value       =  file("${path.module}/input/ssh-privatekey")
+  name        = "/scaut-v2-dev/openshift-build/jenkins-ssh-privatekey"
+  description = "SSH key for Git in Jenkins"
+  type        = "SecureString"
+  value       = file("${path.module}/input/ssh-privatekey")
 }
 
 resource "aws_secretsmanager_secret_version" "jenkins-pypi-config" {
-    secret_id     = aws_secretsmanager_secret.jenkins-pypi-config.id
-    secret_string = jsonencode(local.pypi_config)
+  secret_id     = aws_secretsmanager_secret.jenkins-pypi-config.id
+  secret_string = jsonencode(local.pypi_config)
 }
 
 resource "aws_secretsmanager_secret" "jenkins-pypi-config" {
-    name        = "scaut-v2-dev/openshift-build/jenkins-pypi-config"
-    description = "PyPI config for Jenkins"
+  name        = "scaut-v2-dev/openshift-build/jenkins-pypi-config"
+  description = "PyPI config for Jenkins"
 }
 
 resource "aws_iam_policy" "registry-secrets" {
-    name        = "scaut-v2-dev-RegistrySecrets"
-    description = "Secrets used by docker registry in development"
-    path        = "/scaut-v2-dev/"
+  name        = "scaut-v2-dev-RegistrySecrets"
+  description = "Secrets used by docker registry in development"
+  path        = "/scaut-v2-dev/"
 
-    policy =<<EOF
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -256,11 +273,11 @@ EOF
 }
 
 resource "aws_iam_policy" "registry-config" {
-    name        = "scaut-v2-dev-RegistryConfig"
-    description = "Secrets for the registry config in development"
-    path        = "/scaut-v2-dev/"
+  name        = "scaut-v2-dev-RegistryConfig"
+  description = "Secrets for the registry config in development"
+  path        = "/scaut-v2-dev/"
 
-    policy =<<EOF
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -282,11 +299,11 @@ EOF
 }
 
 resource "aws_iam_policy" "pypi-auth-secrets" {
-    name        = "scaut-v2-dev-PyPIAuthSecrets"
-    description = "Secrets used to control who has access to PyPI"
-    path        = "/scaut-v2-dev/"
+  name        = "scaut-v2-dev-PyPIAuthSecrets"
+  description = "Secrets used to control who has access to PyPI"
+  path        = "/scaut-v2-dev/"
 
-    policy =<<EOF
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -426,9 +443,9 @@ resource "kustomization_resource" "pypiserver" {
 }
 
 resource "kubernetes_namespace" "registry" {
-    metadata {
-        name = "registry"
-    }
+  metadata {
+    name = "registry"
+  }
 }
 
 data "kustomization" "registry" {
@@ -442,11 +459,11 @@ resource "kustomization_resource" "registry" {
 }
 
 resource "aws_iam_policy" "pull-request-service-secrets" {
-    name        = "scaut-v2-dev-PullRequestServiceSecrets"
-    description = "Secrets used by the pull-request-service"
-    path        = "/scaut-v2-dev/"
+  name        = "scaut-v2-dev-PullRequestServiceSecrets"
+  description = "Secrets used by the pull-request-service"
+  path        = "/scaut-v2-dev/"
 
-    policy =<<EOF
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -468,11 +485,11 @@ EOF
 }
 
 resource "aws_iam_policy" "pull-request-service-internal-registry" {
-    name        = "scaut-v2-dev-PullRequestServiceInternalRegistry"
-    description = "Secrets used by the pull-request-service for pulling internal registry images"
-    path        = "/scaut-v2-dev/"
+  name        = "scaut-v2-dev-PullRequestServiceInternalRegistry"
+  description = "Secrets used by the pull-request-service for pulling internal registry images"
+  path        = "/scaut-v2-dev/"
 
-    policy =<<EOF
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -535,13 +552,13 @@ resource "aws_secretsmanager_secret_version" "pull-request-service-secret" {
 }
 
 resource "kubernetes_namespace" "pull-request-service" {
-    metadata {
-        name = "pull-request-service"
+  metadata {
+    name = "pull-request-service"
 
-        annotations = {
-          "iam.amazonaws.com/permitted" = "arn:aws:iam::454089853750:role/secrets/scaut-v2-dev/pull-request-service/scaut-v2-dev-secrets-manager-pull-request-service"
-        }
+    annotations = {
+      "iam.amazonaws.com/permitted" = "arn:aws:iam::454089853750:role/secrets/scaut-v2-dev/pull-request-service/scaut-v2-dev-secrets-manager-pull-request-service"
     }
+  }
 }
 
 resource "aws_iam_role" "scaut-v2-dev-backup" {
@@ -568,13 +585,13 @@ resource "aws_iam_role_policy_attachment" "scaut-v2-dev-backup" {
 }
 
 resource "kubernetes_namespace" "nextcloud" {
-    metadata {
-        name = "nextcloud"
+  metadata {
+    name = "nextcloud"
 
-        annotations = {
-          "iam.amazonaws.com/permitted" = "arn:aws:iam::454089853750:role/secrets/scaut-v2-dev/nextcloud/scaut-v2-dev-secrets-manager-nextcloud"
-        }
+    annotations = {
+      "iam.amazonaws.com/permitted" = "arn:aws:iam::454089853750:role/secrets/scaut-v2-dev/nextcloud/scaut-v2-dev-secrets-manager-nextcloud"
     }
+  }
 }
 
 data "kustomization" "nextcloud" {
@@ -588,23 +605,23 @@ resource "kustomization_resource" "nextcloud" {
 }
 
 resource "random_string" "nextcloud-mysql-root-password" {
-    length = 16
-    special = false
+  length  = 16
+  special = false
 }
 
 resource "random_string" "nextcloud-mysql-user" {
-    length = 16
-    special = false
+  length  = 16
+  special = false
 }
 
 resource "random_string" "nextcloud-mysql-password" {
-    length = 16
-    special = false
+  length  = 16
+  special = false
 }
 
 resource "random_string" "nextcloud-admin-password" {
-    length = 24
-    special = false
+  length  = 24
+  special = false
 }
 
 resource "aws_secretsmanager_secret" "nextcloud-mysql-root" {
@@ -613,7 +630,7 @@ resource "aws_secretsmanager_secret" "nextcloud-mysql-root" {
 }
 
 resource "aws_secretsmanager_secret_version" "nextcloud-mysql-root" {
-  secret_id     = aws_secretsmanager_secret.nextcloud-mysql-root.id
+  secret_id = aws_secretsmanager_secret.nextcloud-mysql-root.id
   secret_string = jsonencode({
     MYSQL_ROOT_PASSWORD = random_string.nextcloud-mysql-root-password.result
   })
@@ -625,8 +642,8 @@ resource "aws_secretsmanager_secret" "nextcloud-mysql-user" {
 }
 
 resource "aws_secretsmanager_secret_version" "nextcloud-mysql-user" {
-  secret_id     = aws_secretsmanager_secret.nextcloud-mysql-user.id
-  secret_string = jsonencode({ 
+  secret_id = aws_secretsmanager_secret.nextcloud-mysql-user.id
+  secret_string = jsonencode({
     MYSQL_PASSWORD = random_string.nextcloud-mysql-password.result,
     MYSQL_USER     = random_string.nextcloud-mysql-user.result,
     MYSQL_DATABASE = "nextcloud"
@@ -639,19 +656,19 @@ resource "aws_secretsmanager_secret" "nextcloud-admin" {
 }
 
 resource "aws_secretsmanager_secret_version" "nextcloud-admin" {
-  secret_id     = aws_secretsmanager_secret.nextcloud-admin.id
-  secret_string = jsonencode({ 
+  secret_id = aws_secretsmanager_secret.nextcloud-admin.id
+  secret_string = jsonencode({
     NEXTCLOUD_ADMIN_USER     = "nextcloud",
     NEXTCLOUD_ADMIN_PASSWORD = random_string.nextcloud-admin-password.result,
   })
 }
 
 resource "aws_iam_policy" "nextcloud-secrets" {
-    name        = "scaut-v2-dev-NEXTCloud"
-    description = "Allows the Kubernetes Secrets Manager to read nextcloud secrets"
-    path        = "/scaut-v2-dev/"
+  name        = "scaut-v2-dev-NEXTCloud"
+  description = "Allows the Kubernetes Secrets Manager to read nextcloud secrets"
+  path        = "/scaut-v2-dev/"
 
-    policy =<<EOF
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -699,7 +716,7 @@ resource "aws_iam_role_policy_attachment" "nextcloud-secrets" {
 }
 
 resource "aws_iam_policy" "push-ecr-images" {
-  policy =<<EOF
+  policy = <<EOF
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -769,7 +786,7 @@ resource "aws_iam_role_policy_attachment" "push-ecr-images" {
 }
 
 resource "aws_iam_policy" "get-eks-config" {
-  policy =<<EOF
+  policy = <<EOF
 {
     "Version": "2012-10-17",
     "Statement": [
