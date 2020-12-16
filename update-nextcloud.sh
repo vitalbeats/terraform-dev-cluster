@@ -19,5 +19,5 @@ git add nextcloud/deployments.yaml
 git commit -m "Update to NEXTCloud ${VERSION}"
 git push ${REMOTE} master
 git checkout ${CURRENT_BRANCH}
-git branch -d update-nextcloud-${VERSION}
+git branch -D update-nextcloud-${VERSION}
 git stash apply
