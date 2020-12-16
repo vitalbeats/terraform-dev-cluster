@@ -17,7 +17,7 @@ sed -i "s#jenkins/jenkins:.*#jenkins/jenkins:${VERSION}#" jenkins/deployments.ya
 terraform apply -auto-approve
 git add jenkins/deployments.yaml
 git commit -m "Update to Jenkins ${VERSION}"
-git push ${REMOTE} master
+git push ${REMOTE} update-jenkins-${VERSION}:master
 git checkout ${CURRENT_BRANCH}
 git branch -D update-jenkins-${VERSION}
 git stash apply

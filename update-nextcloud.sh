@@ -17,7 +17,7 @@ sed -i "s#nextcloud:.*#nextcloud:${VERSION}#" nextcloud/deployments.yaml
 terraform apply -auto-approve
 git add nextcloud/deployments.yaml
 git commit -m "Update to NEXTCloud ${VERSION}"
-git push ${REMOTE} master
+git push ${REMOTE} update-nextcloud-${VERSION}:master
 git checkout ${CURRENT_BRANCH}
 git branch -D update-nextcloud-${VERSION}
 git stash apply
