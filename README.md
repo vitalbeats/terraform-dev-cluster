@@ -33,3 +33,6 @@ There are various services in the cluster which need upgrading. Various scripts 
 
 ### Jenkins
 Run `./update-jenkins.sh <version>` which will upgrade Jenkins and update the master branch to reflect the new version.
+
+### NEXTCloud
+Run `./update-nextcloud.sh <version>` which will upgrade NEXTCloud and update the master branch to reflect the new version.
