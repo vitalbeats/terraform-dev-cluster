@@ -61,7 +61,7 @@ module "cluster" {
   datadog-app-key    = var.datadog_app_key
   datadog-site       = "datadoghq.eu"
   datadog-notifier   = "@slack-vitalbeats-devops"
-  letsencrypt-email  = "engineering@vitalbeats.com"
+  letsencrypt-email  = "nobody@vitalbeats.com"
 }
 
 provider "kubernetes" {
