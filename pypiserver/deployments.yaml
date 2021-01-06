@@ -18,14 +18,14 @@ spec:
         app: pypiserver
     spec:
       securityContext:
-        fsGroup: 3020
+        fsGroup: 9898
       containers:
         - args:
             - '-a'
             - 'update,download,list'
             - '-P'
             - /srv/data/config/htpasswd
-            - /srv/data/packages
+            - /data/packages
           image: 'pypiserver/pypiserver:latest'
           imagePullPolicy: Always
           name: pypiserver
@@ -40,7 +40,7 @@ spec:
               cpu: 250m
               memory: 512Mi
           volumeMounts:
-            - mountPath: /srv/data/packages
+            - mountPath: /data/packages
               name: package-storage
             - mountPath: /srv/data/config
               name: htpasswd
