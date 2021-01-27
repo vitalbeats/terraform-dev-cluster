@@ -26,3 +26,7 @@
   username: marko.mitranic
   groups:
     - system:masters
+- userarn: arn:aws:iam::454089853750:user/magnus.hansen@vitalbeats.com
+  username: magnus.hansen
+  groups:
+    - system:masters
