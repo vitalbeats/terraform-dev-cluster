@@ -18,6 +18,7 @@ configMapGenerator:
   - config/plugins.txt
 - name: jenkins-customization
   files:
+  - config/groovy/datadog.groovy
   - config/groovy/executors.groovy
   - config/groovy/kubernetes.groovy
   - config/groovy/security-realm.groovy

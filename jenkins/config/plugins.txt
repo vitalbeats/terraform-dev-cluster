@@ -17,3 +17,4 @@ google-login:latest
 jdk-tool:latest
 command-launcher:latest
 pipeline-stage-view:latest
+datadog:latest
