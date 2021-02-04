@@ -30,3 +30,7 @@
   username: magnus.hansen
   groups:
     - system:masters
+- userarn: arn:aws:iam::454089853750:user/tone.pedersen@vitalbeats.com
+  username: tone.pedersen
+  groups:
+    - system:masters
