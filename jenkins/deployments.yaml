@@ -53,10 +53,6 @@ spec:
           env:
             - name: JAVA_OPTS
               value: "-Dhudson.TcpSlaveAgentListener.hostName=jenkins"
-            - name: DOGSTATSD_HOST_IP
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.hostIP
           command: ["/bin/bash", "-c"]
           args: ["rm -rf /usr/share/jenkins/ref/init.groovy.d /var/jenkins_home/init.groovy.d; mkdir -p /usr/share/jenkins/ref/init.groovy.d; cp /tmp/jenkins-customization/* /usr/share/jenkins/ref/init.groovy.d/; cp /tmp/jenkins-plugins/plugins.txt /usr/share/jenkins/ref/; /usr/local/bin/install-plugins.sh < /usr/share/jenkins/ref/plugins.txt; /sbin/tini -s -- /usr/local/bin/jenkins.sh"]
           resources:
