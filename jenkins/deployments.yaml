@@ -13,10 +13,10 @@ spec:
   template:
     metadata:
       annotations:
-        ad.datadoghq.com/jenkins.logs: >-
+        ad.datadoghq.com/jenkins.logs: |
           [{
             "source": "jenkins",
-            "service": jenkins,
+            "service": "jenkins",
             "log_processing_rules": [{
               "type": "multi_line",
               "name": "log_start_with_date",
