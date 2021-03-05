@@ -830,3 +830,33 @@ resource "aws_iam_role" "jenkins" {
 }
 EOF
 }
+
+resource "aws_iam_policy" "get-jenkins-nextcloud-user" {
+  name        = "get-jenkins-nextcloud-user"
+  description = "Allows fetching the Jenkins NEXTCloud user"
+  path        = "/scaut-v2-dev/"
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetResourcePolicy",
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:ListSecretVersionIds"
+      ],
+      "Resource": [
+        "arn:aws:secretsmanager:eu-west-1:454089853750:secret:scaut-v2-dev/nextcloud/nextcloud-user*"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "get-jenkins-nextcloud-user" {
+  role       = aws_iam_role.jenkins.name
+  policy_arn = aws_iam_policy.get-jenkins-nextcloud-user.arn
+}
