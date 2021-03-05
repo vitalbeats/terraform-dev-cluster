@@ -848,7 +848,7 @@ resource "aws_iam_policy" "get-jenkins-nextcloud-user" {
         "secretsmanager:ListSecretVersionIds"
       ],
       "Resource": [
-        "arn:aws:secretsmanager:eu-west-1:454089853750:secret:scaut-v2-dev/nextcloud/nextcloud-user*"
+        "arn:aws:secretsmanager:eu-west-1:454089853750:secret:scaut-v2-dev/openshift-build/nextcloud-user*"
       ]
     }
   ]
