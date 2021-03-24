@@ -860,3 +860,19 @@ resource "aws_iam_role_policy_attachment" "get-jenkins-nextcloud-user" {
   role       = aws_iam_role.jenkins.name
   policy_arn = aws_iam_policy.get-jenkins-nextcloud-user.arn
 }
+
+resource "kubernetes_namespace" "plantuml" {
+  metadata {
+    name = "plantuml"
+  }
+}
+
+data "kustomization" "plantuml" {
+  path = "plantuml"
+}
+
+resource "kustomization_resource" "plantuml" {
+  for_each = data.kustomization.plantuml.ids
+
+  manifest = data.kustomization.plantuml.manifests[each.value]
+}

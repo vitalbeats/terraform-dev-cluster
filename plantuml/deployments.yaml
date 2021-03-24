@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: plantuml
+  name: plantuml
+spec:
+  replicas: 1
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: plantuml
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: plantuml
+    spec:
+      containers:
+        - image: plantuml/plantuml-server:jetty
+          name: plantuml
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+              name: web
+          resources:
+            limits:
+              cpu: 250m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+          env:
+            - name: PLANTUML_STATS
+              value: "on"

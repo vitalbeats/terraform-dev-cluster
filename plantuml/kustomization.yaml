@@ -1,0 +1,5 @@
+namespace: plantuml
+resources:
+ - deployments.yaml
+ - ingresses.yaml
+ - services.yaml
