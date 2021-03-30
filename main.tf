@@ -51,7 +51,7 @@ provider "datadog" {
 
 module "cluster" {
   source  = "vitalbeats/cluster/eks"
-  version = "0.2.0-beta.2"
+  version = "0.2.0-beta.3"
 
   cluster-name       = "scaut-v2-dev"
   ec2-ssh-key        = "stephen.badger"
