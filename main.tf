@@ -51,7 +51,7 @@ provider "datadog" {
 
 module "cluster" {
   source  = "vitalbeats/cluster/eks"
-  version = "0.2.0-beta.3"
+  version = "0.2.0-beta.5"
 
   cluster-name       = "scaut-v2-dev"
   ec2-ssh-key        = "stephen.badger"
@@ -763,7 +763,7 @@ resource "aws_backup_plan" "nextcloud" {
     schedule          = "cron(0 4 * * ? *)"
 
     lifecycle {
-      delete_after = 30
+      delete_after = 3
     }
   }
 }
