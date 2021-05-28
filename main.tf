@@ -51,7 +51,7 @@ provider "datadog" {
 
 module "cluster" {
   source  = "vitalbeats/cluster/eks"
-  version = "0.2.0-beta.6"
+  version = "0.2.0-beta.7"
 
   cluster-name       = "scaut-v2-dev"
   ec2-ssh-key        = "stephen.badger"
@@ -62,6 +62,7 @@ module "cluster" {
   datadog-site       = "datadoghq.eu"
   datadog-notifier   = "@slack-vitalbeats-devops"
   letsencrypt-email  = "nobody@vitalbeats.com"
+  worker-nodes       = 4
 }
 
 provider "kubernetes" {
