@@ -6,10 +6,6 @@
   username: stephen.badger
   groups:
     - system:masters
-- userarn: arn:aws:iam::454089853750:user/mikkel.hansen@vitalbeats.com
-  username: mikkel.hansen
-  groups:
-    - system:masters
 - userarn: arn:aws:iam::454089853750:user/christina.villumsen@vitalbeats.com
   username: christina.villumsen
   groups:
@@ -18,16 +14,8 @@
   username: kasper.kristensen
   groups:
     - system:masters
-- userarn: arn:aws:iam::454089853750:user/mika.jalonen@vitalbeats.com
-  username: mika.jalonen
-  groups:
-    - system:masters
 - userarn: arn:aws:iam::454089853750:user/marko.mitranic@vitalbeats.com
   username: marko.mitranic
-  groups:
-    - system:masters
-- userarn: arn:aws:iam::454089853750:user/magnus.hansen@vitalbeats.com
-  username: magnus.hansen
   groups:
     - system:masters
 - userarn: arn:aws:iam::454089853750:user/tone.pedersen@vitalbeats.com
