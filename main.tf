@@ -794,7 +794,7 @@ resource "aws_iam_policy" "get-eks-config" {
         {
             "Effect": "Allow",
             "Action": "eks:DescribeCluster",
-            "Resource": "arn:aws:eks:eu-west-1:454089853750:cluster/scaut-v2-prod"
+            "Resource": "arn:aws:eks:eu-west-1:454089853750:cluster/scaut-v2-*"
         }
     ]
 }
