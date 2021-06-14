@@ -862,6 +862,11 @@ resource "aws_iam_role_policy_attachment" "get-jenkins-nextcloud-user" {
   policy_arn = aws_iam_policy.get-jenkins-nextcloud-user.arn
 }
 
+resource "aws_iam_role_policy_attachment" "assume-datalake-roles" {
+  role = aws_iam_role.jenkins.name
+  policy_arn = "arn:aws:iam::454089853750:policy/assume-role-datalake"
+}
+
 resource "kubernetes_namespace" "plantuml" {
   metadata {
     name = "plantuml"
