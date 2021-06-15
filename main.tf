@@ -862,9 +862,9 @@ resource "aws_iam_role_policy_attachment" "get-jenkins-nextcloud-user" {
   policy_arn = aws_iam_policy.get-jenkins-nextcloud-user.arn
 }
 
-resource "aws_iam_role_policy_attachment" "assume-datalake-roles" {
+resource "aws_iam_role_policy_attachment" "jenkins-datalake-read-write" {
   role = aws_iam_role.jenkins.name
-  policy_arn = "arn:aws:iam::454089853750:policy/assume-role-datalake"
+  policy_arn = "arn:aws:iam::454089853750:policy/datalake_writer_user_can_put_and_get_policy"
 }
 
 resource "kubernetes_namespace" "plantuml" {
