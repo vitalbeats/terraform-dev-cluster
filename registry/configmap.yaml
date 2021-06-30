@@ -22,6 +22,9 @@ data:
         X-Content-Type-Options:
         - nosniff
     log:
+      accesslog:
+        disabled: true
+      level: error
       fields:
         service: registry
     storage:
